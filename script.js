@@ -1,68 +1,88 @@
-body {
-    margin: 0;
-    font-family: Arial, sans-serif;
-    background: #b3e5fc; /* Calm ocean blue */
-    color: #033e6b;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
+const letters = "EEEEAAAAIIOONNRRTTLLSSUU";
+const extraLetters = "BCDFGHMPWY"; 
+let tileBag = document.getElementById('tile-bag');
+let board = document.getElementById('board');
+const chime = document.getElementById('chime');
+const resetBtn = document.getElementById('reset-btn');
+const gridSizeSelect = document.getElementById('grid-size');
+
+let draggedTile = null;
+let placedTiles = 0;
+
+function shuffle(array) {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+  return array;
 }
 
-.container {
-    text-align: center;
+function initGame() {
+  tileBag.innerHTML = '';
+  board.innerHTML = '';
+  placedTiles = 0;
+
+  const size = gridSizeSelect.value;
+  let cols = 8, rows = 5, tileCount = 40;
+  if (size === 'large') {
+    cols = 10;
+    rows = 6;
+    tileCount = 60;
+  }
+
+  board.style.gridTemplateColumns = `repeat(${cols}, 50px)`;
+  board.style.gridTemplateRows = `repeat(${rows}, 50px)`;
+
+  // Generate tiles
+  const bag = (letters + extraLetters.repeat(3)).split('');
+  const shuffledBag = shuffle(bag).slice(0, tileCount);
+
+  shuffledBag.forEach(letter => {
+    const tile = document.createElement('div');
+    tile.className = 'tile';
+    tile.textContent = letter;
+    tile.draggable = true;
+    tile.addEventListener('dragstart', dragStart);
+    tile.addEventListener('dragend', dragEnd);
+    tileBag.appendChild(tile);
+  });
+
+  // Generate board squares
+  for (let i = 0; i < cols * rows; i++) {
+    const square = document.createElement('div');
+    square.addEventListener('dragover', dragOver);
+    square.addEventListener('drop', drop);
+    board.appendChild(square);
+  }
 }
 
-.title {
-    font-size: 2em;
-    margin-bottom: 20px;
+function dragStart(e) {
+  draggedTile = e.target;
+  setTimeout(() => draggedTile.classList.add('dragging'), 0);
 }
 
-.game-area {
-    display: flex;
-    gap: 20px;
-    justify-content: center;
+function dragEnd() {
+  draggedTile.classList.remove('dragging');
+  draggedTile = null;
 }
 
-.tile-bag {
-    display: flex;
-    flex-wrap: wrap;
-    width: 200px;
-    padding: 10px;
-    background: #e1f5fe;
-    border-radius: 10px;
-    min-height: 200px;
+function dragOver(e) {
+  e.preventDefault();
 }
 
-.grid {
-    display: grid;
-    grid-template-columns: repeat(8, 50px);
-    grid-template-rows: repeat(5, 50px);
-    gap: 5px;
-    background: #e1f5fe;
-    padding: 10px;
-    border-radius: 10px;
+function drop() {
+  if (draggedTile && !this.hasChildNodes()) {
+    this.appendChild(draggedTile);
+    placedTiles++;
+    if (placedTiles === board.childNodes.length || placedTiles === document.querySelectorAll('.tile').length) {
+      chime.play();
+    }
+  }
 }
 
-.grid div {
-    width: 50px;
-    height: 50px;
-    background: #ffffff;
-    border-radius: 5px;
-    border: 1px solid #ccc;
-}
+// Event listeners
+resetBtn.addEventListener('click', initGame);
+gridSizeSelect.addEventListener('change', initGame);
 
-.tile {
-    width: 45px;
-    height: 45px;
-    background: #fff;
-    border-radius: 5px;
-    border: 1px solid #ccc;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-weight: bold;
-    font-size: 20px;
-    margin: 3px;
-    cursor: grab;
-}
+// Start game on load
+initGame();
