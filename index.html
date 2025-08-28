@@ -1,21 +1,30 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ocean Word Game</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DriftWord</title>
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="container">
-        <h1 class="title">Ocean Word Game</h1>
-        <div class="game-area">
-            <div class="tile-bag" id="tileBag"></div>
-            <div class="grid" id="grid"></div>
-        </div>
-    </div>
-    <audio id="chime" src="https://www.soundjay.com/buttons/sounds/button-10.mp3"></audio>
-    <script src="script.js"></script>
+  <h1>DriftWord</h1>
+
+  <div class="controls">
+    <label for="grid-size">Grid Size:</label>
+    <select id="grid-size">
+      <option value="small">Small (8×5)</option>
+      <option value="large">Large (10×6)</option>
+    </select>
+    <button id="reset-btn">Reset</button>
+  </div>
+
+  <div class="game-container">
+    <div id="tile-bag" class="tile-bag"></div>
+    <div id="board" class="board"></div>
+  </div>
+
+  <audio id="chime" src="https://cdn.pixabay.com/download/audio/2021/09/13/audio_1c8915a6eb.mp3" preload="auto"></audio>
+  <script src="script.js"></script>
 </body>
 </html>
-
