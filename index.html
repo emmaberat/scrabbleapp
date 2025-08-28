@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DriftWord - Senior Edition</title>
-    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600&family=Pacifico&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Chewy&family=Baloo+2:wght@600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * {
             box-sizing: border-box;
@@ -29,18 +30,36 @@
             padding: 20px;
             margin-bottom: 20px;
             display: flex;
-            justify-content: space-between;
+            flex-direction: column;
+            justify-content: center;
             align-items: center;
             background: rgba(255, 255, 255, 0.8);
             border-radius: 15px;
             box-shadow: 0 4px 15px rgba(0, 102, 153, 0.2);
+            position: relative;
         }
         
         h1 {
-            font-family: 'Pacifico', cursive;
-            font-size: 3rem;
+            font-family: 'Chewy', cursive;
+            font-size: 4.5rem;
             color: #006699;
-            text-shadow: 2px 2px 4px rgba(0, 102, 153, 0.2);
+            text-shadow: 3px 3px 0 #4fc3f7, 
+                        6px 6px 0 rgba(0, 102, 153, 0.2);
+            margin: 10px 0;
+            letter-spacing: 2px;
+            transform: rotate(-2deg);
+        }
+        
+        .wave-container {
+            display: flex;
+            justify-content: center;
+            margin: 5px 0 15px;
+        }
+        
+        .wave {
+            font-size: 2rem;
+            margin: 0 5px;
+            color: #0288d1;
         }
         
         #theme-toggle {
@@ -54,6 +73,7 @@
             font-weight: bold;
             box-shadow: 0 4px 8px rgba(0, 102, 153, 0.3);
             transition: all 0.3s;
+            margin-top: 10px;
         }
         
         #theme-toggle:hover {
@@ -80,6 +100,7 @@
             justify-content: center;
             gap: 15px;
             box-shadow: 0 4px 15px rgba(0, 102, 153, 0.2);
+            min-height: 120px;
         }
         
         .tile {
@@ -147,8 +168,19 @@
             border: 3px solid #006699;
         }
         
+        .cell.filled .tile {
+            width: 100%;
+            height: 100%;
+            border: none;
+            box-shadow: none;
+            border-radius: 6px;
+        }
+        
         #controls {
             margin: 20px 0;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
         }
         
         #reset-btn {
@@ -182,12 +214,19 @@
         .instructions h2 {
             color: #006699;
             margin-bottom: 15px;
+            font-family: 'Chewy', cursive;
+            font-size: 2rem;
         }
         
         .instructions p {
             font-size: 1.2rem;
             margin-bottom: 10px;
             line-height: 1.5;
+        }
+        
+        .instructions i {
+            color: #0288d1;
+            margin-right: 8px;
         }
         
         /* Dark Mode */
@@ -202,6 +241,8 @@
         
         body.dark h1 {
             color: #4fc3f7;
+            text-shadow: 3px 3px 0 #0288d1, 
+                        6px 6px 0 rgba(79, 195, 247, 0.2);
         }
         
         body.dark #tile-bag,
@@ -233,7 +274,7 @@
         
         @media (max-width: 768px) {
             h1 {
-                font-size: 2.2rem;
+                font-size: 3rem;
             }
             
             .tile {
@@ -256,6 +297,11 @@
 <body>
     <header>
         <h1>DriftWord</h1>
+        <div class="wave-container">
+            <div class="wave">🌊</div>
+            <div class="wave">🏄</div>
+            <div class="wave">🌊</div>
+        </div>
         <button id="theme-toggle">🌙 Dark Mode</button>
     </header>
     
@@ -267,16 +313,17 @@
         </div>
         
         <div id="controls">
-            <button id="reset-btn">🔄 Reset Game</button>
+            <button id="reset-btn"><i class="fas fa-sync-alt"></i> Reset Game</button>
         </div>
     </div>
     
     <div class="instructions">
         <h2>How to Play</h2>
-        <p>1. Drag letters from the top area to the grid below</p>
-        <p>2. Try to form words horizontally or vertically</p>
-        <p>3. Click the Reset button to start over</p>
-        <p>4. Use Dark Mode if it's more comfortable for your eyes</p>
+        <p><i class="fas fa-hand-point-right"></i>Drag letters from the top area to the grid below</p>
+        <p><i class="fas fa-hand-point-right"></i>Click on placed letters to move them back to the top</p>
+        <p><i class="fas fa-hand-point-right"></i>Try to form words horizontally or vertically</p>
+        <p><i class="fas fa-hand-point-right"></i>Click the Reset button to start over</p>
+        <p><i class="fas fa-hand-point-right"></i>Use Dark Mode if it's more comfortable for your eyes</p>
     </div>
 
     <script>
@@ -290,14 +337,27 @@
         function generateTiles(count = 40) {
             tileBag.innerHTML = '';
             for (let i = 0; i < count; i++) {
-                const tile = document.createElement('div');
-                tile.className = 'tile';
-                tile.draggable = true;
-                tile.textContent = letters[Math.floor(Math.random() * letters.length)];
-                tile.addEventListener('dragstart', dragStart);
-                tile.addEventListener('dragend', dragEnd);
+                const tile = createTile(letters[Math.floor(Math.random() * letters.length)]);
                 tileBag.appendChild(tile);
             }
+        }
+        
+        // Create a tile element
+        function createTile(letter) {
+            const tile = document.createElement('div');
+            tile.className = 'tile';
+            tile.draggable = true;
+            tile.textContent = letter;
+            tile.addEventListener('dragstart', dragStart);
+            tile.addEventListener('dragend', dragEnd);
+            tile.addEventListener('click', () => {
+                // If tile is in the bag, do nothing
+                if (tile.parentElement === tileBag) return;
+                
+                // Otherwise, move it back to the bag
+                tileBag.appendChild(tile);
+            });
+            return tile;
         }
         
         // Create the 10x10 board
@@ -318,6 +378,7 @@
         // Drag and drop functions
         function dragStart(event) {
             event.dataTransfer.setData('text/plain', event.target.textContent);
+            event.dataTransfer.setData('tile-id', event.target.textContent + Date.now());
             event.target.classList.add('dragging');
         }
         
@@ -350,15 +411,27 @@
             const cell = event.target.closest('.cell');
             
             if (cell && !cell.textContent) {
-                cell.textContent = letter;
+                // Clear any highlighting
                 cell.classList.remove('highlight');
+                
+                // Create a new tile for the board
+                const newTile = createTile(letter);
+                newTile.style.width = '100%';
+                newTile.style.height = '100%';
+                newTile.style.fontSize = '2rem';
+                
+                // Add to the cell
+                cell.appendChild(newTile);
                 cell.classList.add('filled');
                 
-                // Remove the dragged tile
-                const draggingTile = document.querySelector('.tile.dragging');
-                if (draggingTile) {
-                    draggingTile.remove();
-                }
+                // Remove the original tile if it was from the bag
+                const dragId = event.dataTransfer.getData('tile-id');
+                const allTiles = document.querySelectorAll('.tile');
+                allTiles.forEach(tile => {
+                    if (tile.textContent + Date.now() === dragId && tile.parentElement === tileBag) {
+                        tile.remove();
+                    }
+                });
             } else {
                 cell.classList.remove('highlight');
             }
