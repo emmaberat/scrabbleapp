@@ -1,1 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DriftWord - Senior Edition</title>
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600&family=Pacifico&display=swap" rel="stylesheet">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Baloo 2', cursive;
+            background: linear-gradient(135deg, #b3e5fc 0%, #81d4fa 100%);
+            color: #003366;
+            text-align: center;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        header {
+            width: 100%;
+            padding: 20px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0, 102, 153, 0.2);
+        }
+        
+        h1 {
+            font-family: 'Pacifico', cursive;
+            font-size: 3rem;
+            color: #006699;
+            text-shadow: 2px 2px 4px rgba(0, 102, 153, 0.2);
+        }
+        
+        #theme-toggle {
+            background: #4fc3f7;
+            border: none;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 1.2rem;
+            font-weight: bold;
+            box-shadow: 0 4px 8px rgba(0, 102, 153, 0.3);
+            transition: all 0.3s;
+        }
+        
+        #theme-toggle:hover {
+            background: #0288d1;
+            transform: translateY(-2px);
+        }
+        
+        #game-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 25px;
+            width: 100%;
+            max-width: 1200px;
+        }
+        
+        #tile-bag {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 20px;
+            border-radius: 15px;
+            width: 100%;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 15px;
+            box-shadow: 0 4px 15px rgba(0, 102, 153, 0.2);
+        }
+        
+        .tile {
+            background: linear-gradient(135deg, #4fc3f7 0%, #029ae5 100%);
+            border: 3px solid #006699;
+            border-radius: 10px;
+            width: 70px;
+            height: 70px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2.2rem;
+            font-weight: bold;
+            color: white;
+            cursor: grab;
+            user-select: none;
+            box-shadow: 0 4px 8px rgba(0, 102, 153, 0.3);
+            transition: all 0.2s;
+        }
+        
+        .tile.dragging {
+            transform: scale(1.1);
+            box-shadow: 0 6px 12px rgba(0, 102, 153, 0.4);
+        }
+        
+        #board-container {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 25px;
+            border-radius: 15px;
+            width: 100%;
+            box-shadow: 0 4px 15px rgba(0, 102, 153, 0.2);
+        }
+        
+        #board {
+            display: grid;
+            grid-template-columns: repeat(10, 1fr);
+            grid-template-rows: repeat(10, 1fr);
+            gap: 8px;
+            margin: 0 auto;
+            max-width: 700px;
+        }
+        
+        .cell {
+            background: #e1f5fe;
+            border: 2px solid #81d4fa;
+            border-radius: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2rem;
+            font-weight: bold;
+            color: #006699;
+            height: 60px;
+            transition: all 0.3s;
+        }
+        
+        .cell.highlight {
+            background: #b3e5fc;
+            border: 3px dashed #006699;
+        }
+        
+        .cell.filled {
+            background: #4fc3f7;
+            color: white;
+            border: 3px solid #006699;
+        }
+        
+        #controls {
+            margin: 20px 0;
+        }
+        
+        #reset-btn {
+            background: linear-gradient(135deg, #4fc3f7 0%, #029ae5 100%);
+            border: none;
+            color: white;
+            padding: 15px 30px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 1.5rem;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(0, 102, 153, 0.3);
+            transition: all 0.3s;
+        }
+        
+        #reset-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0, 102, 153, 0.4);
+        }
+        
+        .instructions {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 20px;
+            border-radius: 15px;
+            margin-top: 20px;
+            width: 100%;
+            max-width: 800px;
+            box-shadow: 0 4px 15px rgba(0, 102, 153, 0.2);
+        }
+        
+        .instructions h2 {
+            color: #006699;
+            margin-bottom: 15px;
+        }
+        
+        .instructions p {
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+            line-height: 1.5;
+        }
+        
+        /* Dark Mode */
+        body.dark {
+            background: linear-gradient(135deg, #121212 0%, #333333 100%);
+            color: #f5f5f5;
+        }
+        
+        body.dark header {
+            background: rgba(30, 30, 30, 0.9);
+        }
+        
+        body.dark h1 {
+            color: #4fc3f7;
+        }
+        
+        body.dark #tile-bag,
+        body.dark #board-container,
+        body.dark .instructions {
+            background: rgba(30, 30, 30, 0.9);
+        }
+        
+        body.dark .tile {
+            background: linear-gradient(135deg, #0288d1 0%, #01579b 100%);
+            border: 3px solid #4fc3f7;
+        }
+        
+        body.dark .cell {
+            background: #37474f;
+            border: 2px solid #0288d1;
+            color: #f5f5f5;
+        }
+        
+        body.dark .cell.highlight {
+            background: #0288d1;
+            border: 3px dashed #4fc3f7;
+        }
+        
+        body.dark .cell.filled {
+            background: #01579b;
+            border: 3px solid #4fc3f7;
+        }
+        
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2.2rem;
+            }
+            
+            .tile {
+                width: 60px;
+                height: 60px;
+                font-size: 1.8rem;
+            }
+            
+            .cell {
+                height: 50px;
+                font-size: 1.7rem;
+            }
+            
+            #board {
+                gap: 5px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>DriftWord</h1>
+        <button id="theme-toggle">🌙 Dark Mode</button>
+    </header>
+    
+    <div id="game-container">
+        <div id="tile-bag"></div>
+        
+        <div id="board-container">
+            <div id="board"></div>
+        </div>
+        
+        <div id="controls">
+            <button id="reset-btn">🔄 Reset Game</button>
+        </div>
+    </div>
+    
+    <div class="instructions">
+        <h2>How to Play</h2>
+        <p>1. Drag letters from the top area to the grid below</p>
+        <p>2. Try to form words horizontally or vertically</p>
+        <p>3. Click the Reset button to start over</p>
+        <p>4. Use Dark Mode if it's more comfortable for your eyes</p>
+    </div>
+
+    <script>
+        const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        const tileBag = document.getElementById('tile-bag');
+        const board = document.getElementById('board');
+        const resetBtn = document.getElementById('reset-btn');
+        const themeToggle = document.getElementById('theme-toggle');
+        
+        // Generate initial tiles
+        function generateTiles(count = 40) {
+            tileBag.innerHTML = '';
+            for (let i = 0; i < count; i++) {
+                const tile = document.createElement('div');
+                tile.className = 'tile';
+                tile.draggable = true;
+                tile.textContent = letters[Math.floor(Math.random() * letters.length)];
+                tile.addEventListener('dragstart', dragStart);
+                tile.addEventListener('dragend', dragEnd);
+                tileBag.appendChild(tile);
+            }
+        }
+        
+        // Create the 10x10 board
+        function createBoard() {
+            board.innerHTML = '';
+            for (let i = 0; i < 100; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'cell';
+                cell.dataset.index = i;
+                cell.addEventListener('dragover', dragOver);
+                cell.addEventListener('dragenter', dragEnter);
+                cell.addEventListener('dragleave', dragLeave);
+                cell.addEventListener('drop', dropTile);
+                board.appendChild(cell);
+            }
+        }
+        
+        // Drag and drop functions
+        function dragStart(event) {
+            event.dataTransfer.setData('text/plain', event.target.textContent);
+            event.target.classList.add('dragging');
+        }
+        
+        function dragEnd(event) {
+            document.querySelectorAll('.dragging').forEach(el => {
+                el.classList.remove('dragging');
+            });
+        }
+        
+        function dragOver(event) {
+            event.preventDefault();
+        }
+        
+        function dragEnter(event) {
+            event.preventDefault();
+            if (event.target.classList.contains('cell')) {
+                event.target.classList.add('highlight');
+            }
+        }
+        
+        function dragLeave(event) {
+            if (event.target.classList.contains('cell')) {
+                event.target.classList.remove('highlight');
+            }
+        }
+        
+        function dropTile(event) {
+            event.preventDefault();
+            const letter = event.dataTransfer.getData('text/plain');
+            const cell = event.target.closest('.cell');
+            
+            if (cell && !cell.textContent) {
+                cell.textContent = letter;
+                cell.classList.remove('highlight');
+                cell.classList.add('filled');
+                
+                // Remove the dragged tile
+                const draggingTile = document.querySelector('.tile.dragging');
+                if (draggingTile) {
+                    draggingTile.remove();
+                }
+            } else {
+                cell.classList.remove('highlight');
+            }
+        }
+        
+        // Reset game
+        resetBtn.addEventListener('click', () => {
+            generateTiles();
+            createBoard();
+        });
+        
+        // Theme toggle
+        themeToggle.addEventListener('click', () => {
+            document.body.classList.toggle('dark');
+            themeToggle.textContent = document.body.classList.contains('dark') ? '☀ Light Mode' : '🌙 Dark Mode';
+        });
+        
+        // Initialize game
+        generateTiles();
+        createBoard();
+    </script>
+</body>
+</html>
 
