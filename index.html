@@ -50,18 +50,6 @@
             transform: rotate(-2deg);
         }
         
-        .wave-container {
-            display: flex;
-            justify-content: center;
-            margin: 5px 0 15px;
-        }
-        
-        .wave {
-            font-size: 2rem;
-            margin: 0 5px;
-            color: #0288d1;
-        }
-        
         #theme-toggle {
             background: #4fc3f7;
             border: none;
@@ -90,17 +78,64 @@
             max-width: 1200px;
         }
         
+        #tile-section {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        #tile-bag-container {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            width: 100%;
+            justify-content: center;
+        }
+        
         #tile-bag {
             background: rgba(255, 255, 255, 0.9);
             padding: 20px;
             border-radius: 15px;
-            width: 100%;
             display: flex;
             flex-wrap: wrap;
             justify-content: center;
             gap: 15px;
             box-shadow: 0 4px 15px rgba(0, 102, 153, 0.2);
             min-height: 120px;
+            flex: 1;
+            max-width: 900px;
+        }
+        
+        #tile-purse {
+            background: linear-gradient(135deg, #4fc3f7 0%, #029ae5 100%);
+            border: 3px solid #006699;
+            border-radius: 50%;
+            width: 80px;
+            height: 80px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            box-shadow: 0 4px 8px rgba(0, 102, 153, 0.3);
+            transition: all 0.3s;
+        }
+        
+        #tile-purse:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 12px rgba(0, 102, 153, 0.4);
+        }
+        
+        #tile-purse i {
+            font-size: 2.5rem;
+            color: white;
+        }
+        
+        #purse-label {
+            font-weight: bold;
+            margin-top: 5px;
+            font-size: 1.1rem;
         }
         
         .tile {
@@ -256,6 +291,11 @@
             border: 3px solid #4fc3f7;
         }
         
+        body.dark #tile-purse {
+            background: linear-gradient(135deg, #0288d1 0%, #01579b 100%);
+            border: 3px solid #4fc3f7;
+        }
+        
         body.dark .cell {
             background: #37474f;
             border: 2px solid #0288d1;
@@ -278,18 +318,31 @@
             }
             
             .tile {
-                width: 60px;
-                height: 60px;
+                width: 50px;
+                height: 50px;
                 font-size: 1.8rem;
             }
             
+            #tile-purse {
+                width: 60px;
+                height: 60px;
+            }
+            
+            #tile-purse i {
+                font-size: 2rem;
+            }
+            
             .cell {
-                height: 50px;
+                height: 45px;
                 font-size: 1.7rem;
             }
             
             #board {
                 gap: 5px;
+            }
+            
+            #tile-bag-container {
+                flex-direction: column;
             }
         }
     </style>
@@ -297,16 +350,21 @@
 <body>
     <header>
         <h1>DriftWord</h1>
-        <div class="wave-container">
-            <div class="wave">🌊</div>
-            <div class="wave">🏄</div>
-            <div class="wave">🌊</div>
-        </div>
         <button id="theme-toggle">🌙 Dark Mode</button>
     </header>
     
     <div id="game-container">
-        <div id="tile-bag"></div>
+        <div id="tile-section">
+            <div id="tile-bag-container">
+                <div id="tile-bag"></div>
+                <div id="tile-purse-container">
+                    <div id="tile-purse">
+                        <i class="fas fa-plus"></i>
+                    </div>
+                    <div id="purse-label">Get More Tiles</div>
+                </div>
+            </div>
+        </div>
         
         <div id="board-container">
             <div id="board"></div>
@@ -321,24 +379,82 @@
         <h2>How to Play</h2>
         <p><i class="fas fa-hand-point-right"></i>Drag letters from the top area to the grid below</p>
         <p><i class="fas fa-hand-point-right"></i>Click on placed letters to move them back to the top</p>
+        <p><i class="fas fa-hand-point-right"></i>Click the purse button to get more letters</p>
         <p><i class="fas fa-hand-point-right"></i>Try to form words horizontally or vertically</p>
         <p><i class="fas fa-hand-point-right"></i>Click the Reset button to start over</p>
         <p><i class="fas fa-hand-point-right"></i>Use Dark Mode if it's more comfortable for your eyes</p>
     </div>
 
     <script>
-        const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        // Letter distribution data
+        const letterDistribution = {
+            'A': 13, 'B': 3, 'C': 3, 'D': 6, 'E': 18, 'F': 3, 'G': 4, 'H': 3, 
+            'I': 12, 'J': 2, 'K': 2, 'L': 5, 'M': 3, 'N': 8, 'O': 11, 'P': 3, 
+            'Q': 1, 'R': 9, 'S': 6, 'T': 9, 'U': 6, 'V': 2, 'W': 2, 'X': 1, 
+            'Y': 2, 'Z': 1
+        };
+        
         const tileBag = document.getElementById('tile-bag');
         const board = document.getElementById('board');
         const resetBtn = document.getElementById('reset-btn');
         const themeToggle = document.getElementById('theme-toggle');
+        const tilePurse = document.getElementById('tile-purse');
         
-        // Generate initial tiles
-        function generateTiles(count = 40) {
+        let availableTiles = [];
+        let initialTilesDrawn = false;
+        
+        // Create the full set of tiles based on distribution
+        function createFullTileSet() {
+            const tiles = [];
+            for (const [letter, count] of Object.entries(letterDistribution)) {
+                for (let i = 0; i < count; i++) {
+                    tiles.push(letter);
+                }
+            }
+            // Shuffle the tiles
+            return shuffleArray(tiles);
+        }
+        
+        // Fisher-Yates shuffle algorithm
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+        
+        // Generate initial 21 tiles
+        function generateInitialTiles() {
             tileBag.innerHTML = '';
-            for (let i = 0; i < count; i++) {
-                const tile = createTile(letters[Math.floor(Math.random() * letters.length)]);
+            availableTiles = createFullTileSet();
+            
+            // Draw 21 tiles initially
+            for (let i = 0; i < 21; i++) {
+                if (availableTiles.length > 0) {
+                    const letter = availableTiles.pop();
+                    const tile = createTile(letter);
+                    tileBag.appendChild(tile);
+                }
+            }
+            
+            initialTilesDrawn = true;
+        }
+        
+        // Get one additional tile from the purse
+        function getAdditionalTile() {
+            if (availableTiles.length > 0) {
+                const letter = availableTiles.pop();
+                const tile = createTile(letter);
                 tileBag.appendChild(tile);
+                
+                // Add a little animation for visual feedback
+                tilePurse.classList.add('purse-active');
+                setTimeout(() => {
+                    tilePurse.classList.remove('purse-active');
+                }, 300);
+            } else {
+                alert("No more tiles available!");
             }
         }
         
@@ -378,7 +494,7 @@
         // Drag and drop functions
         function dragStart(event) {
             event.dataTransfer.setData('text/plain', event.target.textContent);
-            event.dataTransfer.setData('tile-id', event.target.textContent + Date.now());
+            event.dataTransfer.setData('source-id', 'tile-bag'); // Mark that it's coming from the bag
             event.target.classList.add('dragging');
         }
         
@@ -408,6 +524,7 @@
         function dropTile(event) {
             event.preventDefault();
             const letter = event.dataTransfer.getData('text/plain');
+            const source = event.dataTransfer.getData('source-id');
             const cell = event.target.closest('.cell');
             
             if (cell && !cell.textContent) {
@@ -425,13 +542,12 @@
                 cell.classList.add('filled');
                 
                 // Remove the original tile if it was from the bag
-                const dragId = event.dataTransfer.getData('tile-id');
-                const allTiles = document.querySelectorAll('.tile');
-                allTiles.forEach(tile => {
-                    if (tile.textContent + Date.now() === dragId && tile.parentElement === tileBag) {
-                        tile.remove();
+                if (source === 'tile-bag') {
+                    const draggingTile = document.querySelector('.tile.dragging');
+                    if (draggingTile && draggingTile.parentElement === tileBag) {
+                        draggingTile.remove();
                     }
-                });
+                }
             } else {
                 cell.classList.remove('highlight');
             }
@@ -439,7 +555,7 @@
         
         // Reset game
         resetBtn.addEventListener('click', () => {
-            generateTiles();
+            generateInitialTiles();
             createBoard();
         });
         
@@ -449,9 +565,26 @@
             themeToggle.textContent = document.body.classList.contains('dark') ? '☀ Light Mode' : '🌙 Dark Mode';
         });
         
+        // Tile purse click handler
+        tilePurse.addEventListener('click', getAdditionalTile);
+        
         // Initialize game
-        generateTiles();
+        generateInitialTiles();
         createBoard();
+        
+        // Add CSS animation for purse
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes purseBounce {
+                0% { transform: scale(1); }
+                50% { transform: scale(1.2); }
+                100% { transform: scale(1); }
+            }
+            .purse-active {
+                animation: purseBounce 0.3s ease;
+            }
+        `;
+        document.head.appendChild(style);
     </script>
 </body>
 </html>
